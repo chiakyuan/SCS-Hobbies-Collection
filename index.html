@@ -266,6 +266,7 @@ card.innerHTML = `
 
     function initFilters() {
         [...new Set(products.map(p => p[5]))].forEach(v => { if(v) document.getElementById('l1Filter').innerHTML += `<option value="${v}">${v}</option>`; });
+        updateL2();
         [...new Set(products.map(p => p[14]?.trim()).filter(v => v))].forEach(v => { document.getElementById('tagFilter').innerHTML += `<option value="${v}">${v}</option>`; });
         [...new Set(products.flatMap(p => splitBrands(p[16])))]
             .sort((a, b) => a.localeCompare(b))
