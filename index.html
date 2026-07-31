@@ -46,7 +46,7 @@
         <input type="text" id="searchInput" placeholder="搜索标题/ID..." oninput="debouncedFilter()">
         <select id="l1Filter" onchange="updateL2(); applyFilters()"><option value="">一级类目(全部)</option></select>
         <select id="l2Filter" onchange="applyFilters()"><option value="">二级类目(全部)</option></select>
-        <select id="pFilter" onchange="applyFilters()"><option value="">P0/P1/P2(全部)</option><option value="P0">P0</option><option value="P1">P1</option><option value="P2">P2</option></select>
+        <select id="pFilter" onchange="applyFilters()"><option value="">优先级(全部)</option><option value="高优">高优</option><option value="中优">中优</option><option value="低优">低优</option></select>
         <select id="tagFilter" onchange="applyFilters()"><option value="">特殊标签(全部)</option></select>
         <select id="brandFilter" onchange="applyFilters()"><option value="">品牌名称(全部)</option></select>
         <input type="number" id="minPrice" placeholder="最低价" oninput="debouncedFilter()">
@@ -162,11 +162,19 @@ const mapData = (arr) => {
     };
 };
 
-const getJudgeClass = (judge) => judge === 'P0' ? 'bg-p0' : judge === 'P2' ? 'bg-p2' : 'bg-p1';
+const normalizeJudge = (judge) => {
+    const map = { P0: "高优", P1: "中优", P2: "低优", 高优: "高优", 中优: "中优", 低优: "低优" };
+    return map[(judge || "").trim()] || (judge || "").trim();
+};
+
+const getJudgeClass = (judge) => {
+    const normalized = normalizeJudge(judge);
+    return normalized === "高优" ? "bg-p0" : normalized === "低优" ? "bg-p2" : "bg-p1";
+};
 
 const getJudgePriority = (judge) => {
-    const priority = { P0: 0, P1: 1, P2: 2 };
-    return priority[judge] ?? 99;
+    const priority = { 高优: 0, 中优: 1, 低优: 2 };
+    return priority[normalizeJudge(judge)] ?? 99;
 };
 
 const compareByDefault = (a, b) => {
@@ -190,7 +198,7 @@ const splitBrands = (brandText) => {
             const card = document.createElement('div');
             card.className = 'card';
 card.innerHTML = `
-    <div class="judge-tag ${getJudgeClass(item.judge)}" onclick="checkLink('${item.link1688}')">${item.judge}</div>
+    <div class="judge-tag ${getJudgeClass(item.judge)}" onclick="checkLink('${item.link1688}')">${normalizeJudge(item.judge)}</div>
     ${item.specialTag ? `<div class="special-tag">${item.specialTag}</div>` : ''}
     <div class="img-container" ondblclick="document.getElementById('modalImg').src='${item.imgUrl}'; document.getElementById('imageModal').style.display='flex';">
         <img src="${item.imgUrl}" loading="lazy">
@@ -243,7 +251,7 @@ card.innerHTML = `
         filteredData = products.filter(arr => {
             const i = mapData(arr);
             return (i.title.toLowerCase().includes(q) || i.inviteId.toLowerCase().includes(q)) &&
-                   (!l1 || i.l1 === l1) && (!l2 || i.l2 === l2) && (!p || i.judge === p) && 
+                   (!l1 || i.l1 === l1) && (!l2 || i.l2 === l2) && (!p || normalizeJudge(i.judge) === p) && 
                    (!tag || i.specialTag === tag) && (!brand || splitBrands(i.brandName).includes(brand)) && (i.price >= min && i.price <= max);
         });
         
